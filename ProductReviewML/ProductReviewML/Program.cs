@@ -1,77 +1,112 @@
 ﻿//Load sample data
-using Microsoft.VisualBasic.FileIO;
 using ProductReviewML;
-using System.Reflection.Emit;
+using System.Text;
 
 var sort = new SortHelper();
 
+Console.Write("Choices:\n0 - Ananlyze Comment\n1 - Analyze Product Review\nAnswer: ");
+string? choice = Console.ReadLine();
 
-//var sampleData = new SentimentModel.ModelInput()
-//{
-//    Review = review
-//};
-var path = "C:\\Users\\Kid Omar Costelo\\Downloads\\sample3.csv";
-
-// Create a TextFieldParser object
-int column = 8; // the zero-based index of the column to extract values from (i.e., the 6th column)
-string name = "";
-IEnumerable<string> data = new List<string>();
-try
+if(choice == "0")
 {
-    // Read all lines from the CSV file
-    //string[] lines = File.ReadAllLines(path);
-    //name = (from line in File.ReadLines(path).Skip(1)
-    //       let columns = line.Split(',')
-    //       select columns[2]).First();
+    Console.Write("\nInput: ");
+    var review = Console.ReadLine();
 
-
-    // Extract the values from the specified column
-        data = from line in File.ReadLines(path).Skip(1)
-               let columns = line.Split(',')
-               where !string.IsNullOrEmpty(columns[0])
-               select columns[0];
-}
-catch (Exception ex)
-{
-    Console.WriteLine("Error: " + ex.Message);
-}
-
-float positive = 0, negative = 0, neutral = 0, notRelated = 0;
-
-var total = data.Count();
-
-foreach (var review in data)
-{
-    Console.WriteLine("tick");
-    var sampleData = new SentimentModel.ModelInput()
+    if (review != null)
     {
-        Review = review
-    };
+        var sampleData = new SentimentModel.ModelInput()
+        {
+            Review = review
+        };
 
-    var result = SentimentModel.Predict(sampleData);
+        //Load model and predict output
+        var result = SentimentModel.Predict(sampleData);
 
-    switch (result.PredictedLabel)
+        Console.WriteLine("\nResult: " + result.PredictedLabel + "\n");
+        sort.Sort(result.Score[0], result.Score[1], result.Score[2], result.Score[3]);
+    }
+    else
     {
-        case ("Positive"):
-            positive++;
-            break;
-        case ("Negative"):
-            negative++;
-            break;
-        case ("Neutral"):
-            neutral++;
-            break;
-        case ("Not Related"):
-            notRelated++;
-            break;
+        Console.WriteLine("Error: Input is null");
     }
 }
+else if(choice == "1")
+{
+    var path = "C:\\Users\\Administrator\\Desktop\\Dataset\\ProductSampleClean.csv";
 
-float[] averages = { positive, negative, neutral, notRelated };
+    List<string> data = new List<string>();
+    try
+    {
+        using (var reader = new StreamReader(path))
+        {
+            // Skip the header row
+            reader.ReadLine();
 
+            while (!reader.EndOfStream)
+            {
+                // Read the next line
+                var line = reader.ReadLine();
 
-Console.WriteLine(String.Join(",", averages));
+                // Split the line into columns using a comma as the delimiter
+                var columns = line?.Split(',');
 
-averages = averages.Select(num => num / total).ToArray();
+                // Add the value from the first column to the list
+                if (!string.IsNullOrEmpty(columns[0]))
+                {
+                    data.Add(columns[0]);
+                }
+            }
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine("Error: " + ex.Message);
+    }
 
-sort.Sort(averages[0], averages[1], averages[2], averages[3]);
+    float positive = 0, negative = 0, neutral = 0, notRelated = 0;
+    var total = data.Count();
+    var count = 0;
+
+    StringBuilder reviewBuilder = new StringBuilder();
+    foreach (var review in data)
+    {
+        reviewBuilder.Clear();
+        reviewBuilder.Append(review);
+
+        Console.WriteLine(count++);
+        var sampleData = new SentimentModel.ModelInput()
+        {
+            Review = reviewBuilder.ToString()
+        };
+
+        var result = SentimentModel.Predict(sampleData);
+
+        switch (result.PredictedLabel)
+        {
+            case ("Positive"):
+                positive++;
+                break;
+            case ("Negative"):
+                negative++;
+                break;
+            case ("Neutral"):
+                neutral++;
+                break;
+            case ("Not Related"):
+                notRelated++;
+                break;
+        }
+
+        if (count == 500)
+            break;
+    }
+
+    float[] averages = { positive, negative, neutral, notRelated };
+
+    Console.WriteLine($"\n\nTotal:\nPositive: {positive}\nNegative: {negative}\nNeutral: {neutral}\nNot Related: {notRelated}\n\n");
+
+    averages = averages.Select(num => num / count).ToArray();
+
+    Console.WriteLine("Average:");
+    sort.Sort(averages[0], averages[1], averages[2], averages[3]);
+}
