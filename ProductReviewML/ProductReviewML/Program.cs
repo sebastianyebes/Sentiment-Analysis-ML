@@ -32,7 +32,7 @@ if(choice == "0")
 }
 else if(choice == "1")
 {
-    var path = "C:\\Users\\Administrator\\Desktop\\Dataset\\ProductSampleClean.csv";
+    var path = "stringpath";
 
     List<string> data = new List<string>();
     try
@@ -48,7 +48,7 @@ else if(choice == "1")
                 var line = reader.ReadLine();
 
                 // Split the line into columns using a comma as the delimiter
-                var columns = line?.Split(',');
+                var columns = line?.Trim().Split(',');
 
                 // Add the value from the first column to the list
                 if (!string.IsNullOrEmpty(columns[0]))
@@ -73,7 +73,7 @@ else if(choice == "1")
         reviewBuilder.Clear();
         reviewBuilder.Append(review);
 
-        Console.WriteLine(count++);
+        Console.WriteLine($"{count++} Reviews Checked");
         var sampleData = new SentimentModel.ModelInput()
         {
             Review = reviewBuilder.ToString()
@@ -85,15 +85,19 @@ else if(choice == "1")
         {
             case ("Positive"):
                 positive++;
+                //Console.WriteLine($"Positive - {review}");
                 break;
             case ("Negative"):
                 negative++;
+                //Console.WriteLine($"Negative - {review}");
                 break;
             case ("Neutral"):
                 neutral++;
+                //Console.WriteLine($"Neutral - {review}");
                 break;
             case ("Not Related"):
                 notRelated++;
+                //Console.WriteLine($"Not Related - {review}");
                 break;
         }
 
